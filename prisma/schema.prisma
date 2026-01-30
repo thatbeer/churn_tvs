@@ -1,0 +1,27 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Subscriber {
+  id               String   @id
+  name             String
+  email            String
+  plan             String
+  status           String
+  ltv              Float
+  joinDate         String   @map("join_date")
+  lastActive       String   @map("last_active")
+  churnProbability Float    @map("churn_probability")
+  riskScore        Int      @map("risk_score")
+  favoriteGenre    String   @map("favorite_genre")
+  bufferingEvents  Int      @map("buffering_events")
+  watchTimeHours   Float    @map("watch_time_hours")
+  tags             String   // Stored as comma-separated string
+
+  @@map("subscribers")
+}
