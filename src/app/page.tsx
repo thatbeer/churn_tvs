@@ -1,7 +1,8 @@
 import KPICards from "@/components/dashboard/KPICards";
-import ChurnForecastChart from "@/components/dashboard/ChurnForecastChart";
 import MonthlyVolumeChart from "@/components/dashboard/MonthlyVolumeChart";
 import DemographicsCharts from "@/components/dashboard/DemographicsCharts";
+import RevenueAtRisk from "@/components/dashboard/RevenueAtRisk";
+import ChurnStatusDistribution from "@/components/dashboard/ChurnStatusDistribution";
 
 export default function Home() {
     return (
@@ -22,14 +23,13 @@ export default function Home() {
 
             <KPICards />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                    <ChurnForecastChart />
-                </div>
-                <div>
-                    <MonthlyVolumeChart />
-                </div>
+            {/* Revenue at Risk & Churn Status Distribution */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <RevenueAtRisk />
+                <ChurnStatusDistribution />
             </div>
+
+            <MonthlyVolumeChart />
 
             <DemographicsCharts />
         </div>

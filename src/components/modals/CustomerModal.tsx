@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
-import { X, AlertTriangle, PlayCircle, Clock, Zap, Sparkles, Check } from 'lucide-react';
+import React from 'react';
+import { X, AlertTriangle, PlayCircle, Clock, Zap, Calendar, CheckCircle, CreditCard } from 'lucide-react';
 import { Subscriber } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
+import { XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, CartesianGrid } from 'recharts';
 
 interface CustomerModalProps {
     subscriber: Subscriber | null;
@@ -12,34 +12,25 @@ interface CustomerModalProps {
 }
 
 export default function CustomerModal({ subscriber, onClose }: CustomerModalProps) {
-    const [isGenerating, setIsGenerating] = useState(false);
-    const [planGenerated, setPlanGenerated] = useState(false);
 
     if (!subscriber) return null;
 
-    const riskFactors = [
-        { name: 'Buffering', value: subscriber.bufferingEvents * 10 },
-        { name: 'Price', value: subscriber.plan === 'Premium' ? 80 : 40 },
-        { name: 'Usage Drop', value: 100 - subscriber.watchTimeHours },
-        { name: 'Competitor', value: 30 },
+
+
+    // Calculate base monthly price based on plan
+    const monthlyPrice = subscriber.plan === 'Premium' ? 17.99 : subscriber.plan === 'Standard' ? 13.99 : 8.99;
+    const avgSpending = monthlyPrice * 0.95; // Average spending across all users
+
+    const purchasingTrend = [
+        { month: 'Jan', spending: monthlyPrice, avgSpending: avgSpending },
+        { month: 'Feb', spending: monthlyPrice, avgSpending: avgSpending },
+        { month: 'Mar', spending: monthlyPrice * (subscriber.status === 'At-Risk' ? 0.9 : 1), avgSpending: avgSpending },
+        { month: 'Apr', spending: monthlyPrice * (subscriber.status === 'At-Risk' ? 0.85 : 1), avgSpending: avgSpending },
+        { month: 'May', spending: monthlyPrice * (subscriber.status === 'At-Risk' ? 0.7 : 1), avgSpending: avgSpending },
+        { month: 'Jun', spending: monthlyPrice * (subscriber.status === 'At-Risk' ? 0.5 : 0.95), avgSpending: avgSpending },
     ];
 
-    const usageTrend = [
-        { month: 'Jan', hours: subscriber.watchTimeHours + 20 },
-        { month: 'Feb', hours: subscriber.watchTimeHours + 15 },
-        { month: 'Mar', hours: subscriber.watchTimeHours + 10 },
-        { month: 'Apr', hours: subscriber.watchTimeHours + 5 },
-        { month: 'May', hours: subscriber.watchTimeHours },
-        { month: 'Jun', hours: Math.max(0, subscriber.watchTimeHours - 5) },
-    ];
 
-    const handleGeneratePlan = () => {
-        setIsGenerating(true);
-        setTimeout(() => {
-            setIsGenerating(false);
-            setPlanGenerated(true);
-        }, 2000);
-    };
 
     // Use subscriber data directly (populated from DB)
     const displayProbability = subscriber.churnProbability;
@@ -79,6 +70,61 @@ export default function CustomerModal({ subscriber, onClose }: CustomerModalProp
                 <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left Column: Risk & Metrics */}
                     <div className="space-y-6">
+                        {/* Package Card */}
+                        <div className={cn(
+                            "p-4 rounded-xl border-2 relative overflow-hidden",
+                            subscriber.plan === 'Premium'
+                                ? "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200"
+                                : subscriber.plan === 'Standard'
+                                    ? "bg-gradient-to-br from-indigo-50 to-violet-50 border-indigo-200"
+                                    : "bg-gradient-to-br from-slate-50 to-gray-50 border-slate-200"
+                        )}>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Current Package</span>
+                                    <div className={cn(
+                                        "text-2xl font-bold mt-1",
+                                        subscriber.plan === 'Premium'
+                                            ? "text-amber-600"
+                                            : subscriber.plan === 'Standard'
+                                                ? "text-indigo-600"
+                                                : "text-slate-600"
+                                    )}>
+                                        {subscriber.plan}
+                                    </div>
+                                    <div className="text-sm text-slate-500 mt-1">
+                                        ${subscriber.plan === 'Premium' ? '17.99' : subscriber.plan === 'Standard' ? '13.99' : '8.99'}/mo
+                                    </div>
+                                </div>
+                                <div className={cn(
+                                    "p-3 rounded-xl",
+                                    subscriber.plan === 'Premium'
+                                        ? "bg-amber-100"
+                                        : subscriber.plan === 'Standard'
+                                            ? "bg-indigo-100"
+                                            : "bg-slate-100"
+                                )}>
+                                    <svg className={cn(
+                                        "w-8 h-8",
+                                        subscriber.plan === 'Premium'
+                                            ? "text-amber-500"
+                                            : subscriber.plan === 'Standard'
+                                                ? "text-indigo-500"
+                                                : "text-slate-500"
+                                    )} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            {subscriber.plan === 'Premium' && (
+                                <div className="absolute top-2 right-2">
+                                    <span className="px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full shadow-sm">
+                                        ⭐ VIP
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
                         {/* Risk Score Card */}
                         <div className={cn(
                             "p-6 rounded-xl border-2",
@@ -86,10 +132,6 @@ export default function CustomerModal({ subscriber, onClose }: CustomerModalProp
                         )}>
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-semibold text-slate-600">CHURN PROBABILITY</span>
-                                <div className="flex items-center gap-1 text-xs font-medium bg-white px-2 py-1 rounded-full shadow-sm">
-                                    <Sparkles className="w-3 h-3 text-indigo-500" />
-                                    AI Confidence: 94%
-                                </div>
                             </div>
                             <div className={cn(
                                 "text-5xl font-bold mb-2",
@@ -135,91 +177,111 @@ export default function CustomerModal({ subscriber, onClose }: CustomerModalProp
                         </div>
                     </div>
 
-                    {/* Right Column: Analysis & Action */}
+                    {/* Right Column: Purchasing Trend */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Charts */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="bg-white p-4 rounded-xl border border-slate-200 h-64">
-                                <h3 className="text-sm font-semibold text-slate-900 mb-4">Risk Factors</h3>
-                                <ResponsiveContainer width="100%" height="85%">
-                                    <BarChart data={riskFactors} layout="vertical" margin={{ left: 20 }}>
-                                        <XAxis type="number" hide />
-                                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={70} tick={{ fontSize: 11 }} />
-                                        <Tooltip cursor={{ fill: '#f8fafc' }} />
-                                        <Bar dataKey="value" fill="#f43f5e" radius={[0, 4, 4, 0]} barSize={20} />
-                                    </BarChart>
-                                </ResponsiveContainer>
+                        {/* Purchasing Trend Chart */}
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 h-64">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-sm font-semibold text-slate-900">Purchasing Trend (6 Months)</h3>
+                                <div className="flex items-center gap-3 text-xs">
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                                        <span className="text-slate-500">Spending</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <div className="w-3 h-3 rounded-full bg-slate-400" />
+                                        <span className="text-slate-500">Avg</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="bg-white p-4 rounded-xl border border-slate-200 h-64">
-                                <h3 className="text-sm font-semibold text-slate-900 mb-4">Usage Trend (6 Months)</h3>
-                                <ResponsiveContainer width="100%" height="85%">
-                                    <AreaChart data={usageTrend}>
-                                        <defs>
-                                            <linearGradient id="colorUsage" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-                                        <Tooltip />
-                                        <Area type="monotone" dataKey="hours" stroke="#6366f1" fillOpacity={1} fill="url(#colorUsage)" />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            </div>
+                            <ResponsiveContainer width="100%" height="80%">
+                                <AreaChart data={purchasingTrend}>
+                                    <defs>
+                                        <linearGradient id="colorSpending" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10 }} tickFormatter={(value) => `$${value}`} width={40} />
+                                    <Tooltip
+                                        formatter={(value: number) => [`$${value.toFixed(2)}`, '']}
+                                        labelFormatter={(label) => `Month: ${label}`}
+                                    />
+                                    <Area type="monotone" dataKey="avgSpending" stroke="#94a3b8" strokeDasharray="5 5" fill="none" name="Avg Spending" />
+                                    <Area type="monotone" dataKey="spending" stroke="#10b981" fillOpacity={1} fill="url(#colorSpending)" name="Spending" />
+                                </AreaChart>
+                            </ResponsiveContainer>
                         </div>
 
-                        {/* AI Action */}
-                        <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
-                                    <Sparkles className="w-5 h-5 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-indigo-900">AI Retention Strategy</h3>
-                                    <p className="text-sm text-indigo-600">Generate a personalized plan to save this customer.</p>
-                                </div>
-                            </div>
+                        {/* Customer Journey Timeline */}
+                        <div className="bg-white p-5 rounded-xl border border-slate-200">
+                            <h3 className="text-sm font-semibold text-slate-900 mb-4">Customer Journey</h3>
+                            <div className="relative">
+                                {/* Timeline Line */}
+                                <div className="absolute left-[17px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-emerald-500 via-indigo-500 to-slate-300" />
 
-                            {!planGenerated ? (
-                                <button
-                                    onClick={handleGeneratePlan}
-                                    disabled={isGenerating}
-                                    className="w-full py-3 bg-white border border-indigo-200 rounded-lg font-medium text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 transition-all shadow-sm flex items-center justify-center gap-2"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <span className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></span>
-                                            Analyzing customer profile...
-                                        </>
-                                    ) : (
-                                        <>
-                                            Generate Retention Plan
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <div className="bg-white rounded-lg border border-indigo-100 p-4 animate-in fade-in slide-in-from-bottom-2">
-                                    <div className="flex items-start gap-3 mb-3">
-                                        <Check className="w-5 h-5 text-emerald-500 mt-0.5" />
-                                        <div>
-                                            <h4 className="font-semibold text-slate-900">Recommended Action: "Tech Support Outreach"</h4>
-                                            <p className="text-sm text-slate-600 mt-1">
-                                                This user is experiencing high buffering on the Premium plan. They are likely frustrated with paying top dollar for poor performance.
+                                {/* Timeline Items */}
+                                <div className="space-y-4">
+                                    {/* Join Date */}
+                                    <div className="flex items-start gap-4">
+                                        <div className="relative z-10 p-2 bg-emerald-100 rounded-full">
+                                            <Calendar className="w-4 h-4 text-emerald-600" />
+                                        </div>
+                                        <div className="flex-1 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-900">Joined</span>
+                                                <span className="text-sm text-slate-500">{subscriber.joinDate}</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-0.5">
+                                                {Math.floor((new Date().getTime() - new Date(subscriber.joinDate).getTime()) / (1000 * 60 * 60 * 24))} days as subscriber
                                             </p>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-50 rounded border border-slate-200 p-3 text-sm text-slate-600 font-mono">
-                                        Subject: We noticed some playback issues...<br />
-                                        Hi {subscriber.name.split(' ')[0]},<br /><br />
-                                        I noticed you've had some buffering interruptions lately. I've credited your account with a free month while our team investigates the connection to your area...
+
+                                    {/* Last Payment */}
+                                    <div className="flex items-start gap-4">
+                                        <div className="relative z-10 p-2 bg-indigo-100 rounded-full">
+                                            <CreditCard className="w-4 h-4 text-indigo-600" />
+                                        </div>
+                                        <div className="flex-1 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-900">Last Payment</span>
+                                                <span className="text-sm text-slate-500">{subscriber.joinDate}</span>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-0.5">
+                                                ${subscriber.plan === 'Premium' ? '17.99' : subscriber.plan === 'Standard' ? '13.99' : '8.99'} / month
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="flex gap-3 mt-4">
-                                        <button className="flex-1 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">Send Email</button>
-                                        <button className="flex-1 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50">Edit Draft</button>
+
+                                    {/* Last Active */}
+                                    <div className="flex items-start gap-4">
+                                        <div className={cn(
+                                            "relative z-10 p-2 rounded-full",
+                                            subscriber.status === 'At-Risk' ? "bg-amber-100" : "bg-emerald-100"
+                                        )}>
+                                            <CheckCircle className={cn(
+                                                "w-4 h-4",
+                                                subscriber.status === 'At-Risk' ? "text-amber-600" : "text-emerald-600"
+                                            )} />
+                                        </div>
+                                        <div className="flex-1 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-900">Last Active</span>
+                                                <span className="text-sm text-slate-500">{subscriber.lastActive}</span>
+                                            </div>
+                                            <p className={cn(
+                                                "text-xs mt-0.5",
+                                                subscriber.status === 'At-Risk' ? "text-amber-500" : "text-emerald-500"
+                                            )}>
+                                                {Math.floor((new Date().getTime() - new Date(subscriber.lastActive).getTime()) / (1000 * 60 * 60 * 24))} days ago
+                                            </p>
+                                        </div>
                                     </div>
                                 </div>
-                            )}
+                            </div>
                         </div>
                     </div>
                 </div>

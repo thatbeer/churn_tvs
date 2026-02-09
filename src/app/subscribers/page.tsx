@@ -1,4 +1,5 @@
 import SubscriberTable from "@/components/subscribers/SubscriberTable";
+import TopRiskCard from "@/components/subscribers/TopRiskCard";
 
 export default function SubscribersPage() {
     return (
@@ -12,6 +13,9 @@ export default function SubscribersPage() {
                     Export List
                 </button>
             </div>
+
+            {/* Top Highest Risk Subscribers Card */}
+            <TopRiskCard />
 
             <SubscriberTable />
         </div>
